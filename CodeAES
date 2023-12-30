@@ -1,0 +1,73 @@
+using System;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+
+class Program
+{
+    static void Main()
+    {
+        // Initialization key and vector (IV)
+        string key = "0123456789abcdef0123456789abcdef";
+        string iv = "0123456789abcdef";
+        Console.WriteLine("Encryption and decryption of a text using the AES encryption algorithm >");
+        // Data to be encrypted
+        string plainText = "The end-of-semester project of Cryptography and Data Security Technologies!";
+
+        // Encrypting data
+        string encryptedText = EncryptString(plainText, key, iv);
+        Console.WriteLine($"\nEncrypted text: {encryptedText}");
+
+        // Decrypting data
+        string decryptedText = DecryptString(encryptedText, key, iv);
+        Console.WriteLine($"\nDecrypted text: {decryptedText}");
+
+        Console.ReadKey();
+    }
+
+    static string EncryptString(string plainText, string key, string iv)
+    {
+        using (Aes aesAlg = Aes.Create())
+        {
+            aesAlg.Key = Encoding.UTF8.GetBytes(key);
+            aesAlg.IV = Encoding.UTF8.GetBytes(iv);
+
+            ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
+
+            using (MemoryStream msEncrypt = new MemoryStream())
+            {
+                using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                {
+                    using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                    {
+                        swEncrypt.Write(plainText);
+                    }
+                }
+
+                return Convert.ToBase64String(msEncrypt.ToArray());
+            }
+        }
+    }
+
+    static string DecryptString(string cipherText, string key, string iv)
+    {
+        using (Aes aesAlg = Aes.Create())
+        {
+            aesAlg.Key = Encoding.UTF8.GetBytes(key);
+            aesAlg.IV = Encoding.UTF8.GetBytes(iv);
+
+            ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+
+            using (MemoryStream msDecrypt = new MemoryStream(Convert.FromBase64String(cipherText)))
+            {
+                using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                {
+                    using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                    {
+                        return srDecrypt.ReadToEnd();
+                    }
+                }
+            }
+        }
+    }
+}
